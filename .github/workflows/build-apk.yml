@@ -1,0 +1,51 @@
+name: Build APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag (e.g., v1.0.0)'
+        required: true
+        type: string
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v2
+        with:
+          api-version: 35
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Expo prebuild
+        run: npx expo prebuild --platform android --clean
+
+      - name: Build debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug
+
+      - name: Rename APK
+        run: |
+          APK_NAME="grocery-tracker-${{ github.event.inputs.version }}.apk"
+          cp android/app/build/outputs/apk/debug/app-debug.apk "$APK_NAME"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.version }}
+          name: Release ${{ github.event.inputs.version }}
+          files: grocery-tracker-${{ github.event.inputs.version }}.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
