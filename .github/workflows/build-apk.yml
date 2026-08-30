@@ -29,7 +29,7 @@ jobs:
           api-version: 35
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Expo prebuild
         run: npx expo prebuild --platform android --clean
