@@ -40,16 +40,18 @@ jobs:
         working-directory: android
         run: ./gradlew assembleDebug
 
-      - name: Rename APK
-        run: |
-          APK_NAME="grocery-tracker-${{ github.event.inputs.version }}.apk"
-          cp android/app/build/outputs/apk/debug/app-debug.apk "$APK_NAME"
+      - name: Upload APK as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: grocery-tracker
+          path: android/app/build/outputs/apk/debug/app-debug.apk
 
       - name: Create GitHub Release
+        if: github.event_name == 'workflow_dispatch'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.event.inputs.version }}
           name: Release ${{ github.event.inputs.version }}
-          files: grocery-tracker-${{ github.event.inputs.version }}.apk
+          files: android/app/build/outputs/apk/debug/app-debug.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
